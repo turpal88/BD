@@ -29,6 +29,8 @@ PhoneBook::PhoneBook() {
 	//is_needed_to_define_own_column_names = true;
 	is_main_table_created = false;
 	is_aux_table_created = false;
+	table_name = "";
+
 	
 }
 
@@ -91,8 +93,8 @@ std::string PhoneBook::create_new_main_table() {
 		"create table " + this->get_table_name() + "(id serial primary key, "
 		+ "name varchar(50) not null, "
 		+ "surname varchar(50) not null, "
-		+ "email varchar(50) unique, "
-		+ "has_mobile_phone varchar(50));";
+		+ "email varchar(50) unique not null, "
+		+ "has_mobile_phone varchar(50) not null);";
 		 
 		
 		
@@ -102,7 +104,7 @@ std::string PhoneBook::create_new_main_table() {
 //метод создания новой вспомогательной таблицы
 std::string PhoneBook::create_new_aux_table() {
 	return "CREATE TABLE " + this->get_table_name() + "_aux" + "(id serial primary key, "
-		+ "phone_book_id integer references " + this->get_table_name() + "_aux" + "(id), "
+		+ "phone_book_id integer references " + this->get_table_name() + "(id), "
 		+ "mobile_phone varchar(50));";
 }
 
@@ -120,17 +122,14 @@ std::string PhoneBook::delete_aux_table() {
 // метод для задавания вопросов пользователю и получения ответов
 int PhoneBook::ask_ans_cycle_request(int answer2) {
 	
-		//std::cin >> answer2;
+		
 		if (answer2 == 1 || answer2 == 2) {
 			if (answer2 == 1) return 1;
-			//this->create_new_main_and_aux_table();
-			//switch_way=1 - таблицы созданы с помощью метода, далее работа с данными таблицы(добавление, удаление, модификация)
-			//this->switch_way = 1;
-			//return 1;
+			
 
 		//в случае если таблица с нужной структурой в базе отсутствует и пользователь не хочет ее создавать, заканчиваем взаимодействие
 			else {
-				std::cout << "Всех благ" << std::endl;
+				
 				return 2;
 			}
 		}
@@ -138,11 +137,7 @@ int PhoneBook::ask_ans_cycle_request(int answer2) {
 	
 } 
 
-/*
-std::string PhoneBook::get_last_row_number() {
-	return "select count(*) from " + this->get_table_name() + ";";
-}
-*/
+
 
 std::string PhoneBook::is_main_table_valid() {
 	return "select column_name, is_nullable, udt_name from information_schema.columns where table_name='" + this->get_table_name() + "'";
@@ -153,117 +148,30 @@ std::string PhoneBook::is_aux_table_valid() {
 }
 
 
-/*
-std::string PhoneBook::add_new_client() {
-	std::string name;
-	std::cout << "name: "; 
-	
+
+
+std::string PhoneBook::check_duplicate_client(std::string name, std::string surname) {
+	return
+		"select name, surname from " + this->get_table_name()
+		+ "where name='" + name + "' and surname='" + surname + "'";
 }
-*/
-
-/*
-void PhoneBook::set_db_fields() {
-	
-	char answer = ' ';
-	std::cout << std::endl;
-	std::cout << "В таблицу БД будем заносить столбцы \"id\" \"Имя\" \"Фамилия\" \"email\" \"Телефон\"? Или запишем свои?\n(Последний столбец - может быть больше одной записи или не быть вовсе на один id)\n('n' - не пишем свои 'y' - пишем свои)";
-	
-		while (true) {
-			std::cin >> answer;
-			if (answer == 'n') {
-				db_column_names.push_back("id");
-				db_column_names.push_back("Name");
-				db_column_names.push_back("Surname");
-				db_column_names.push_back("email");
-				db_column_names.push_back("Mobile_phone");
-				return;
-			}
-			if (answer == 'y') break;
-			else {
-				std::cout << "Введите нормальный ответ: ";
-				continue;
-			}
 
 
-		}
-	
-	
-		std::cout << std::endl;
-	std::cout << "Пишу названия столбцов таблицы БД: ";
-	//std::cin >> db_column_count;
-	//std::cout << "Заносим в базу названия столбцов:" << std::endl;
-	
-	int count = 1;
-	char c = ' ';
-	bool failure; //флаг введенного хотя бы 1 символа в названии столбца вне значений вектора allowed_ascii_values, приведенных к char
-	bool enough = false; //хватит столбцов флаг
-	std::string column_name;
-	//std::vector<std::string> db_column_names;
-	while (true) {
-		column_name = ""; //обнуляем буферную переменную названия столбца БД
-		std::cout << count << ".";
-		std::cin >> column_name;
-		
-		
-		failure = false; //перед проверкой символов названия столбца сбрасываем флаг неправильно введенного в прошлую итерацию символа
-		std::for_each(column_name.begin(), column_name.end(), [&](const char& x) {
-			if (!failure) {
-			auto it = std::find(allowed_ascii_values.begin(), allowed_ascii_values.end(), static_cast<int>(x));
-			
-				if (it == allowed_ascii_values.end()) {
-					//std::string message = "Введено неадекватное название столбца. Так не пойдет. \nВводите заново или до свидания (o - еще раз, b - до свидания)";
-					std::cout << "Введено неадекватное название столбца. Так не пойдет. \nВводите заново или до свидания (o - еще раз, b - до свидания)";
-					while (true) {
-						std::cin >> answer;
-						if (answer == 'o' || answer == 'b') {
-							if (answer == 'o') {
-								failure = true; //ставим флаг что есть некорректный символ - чтобы цикл std::for_each дальше остальные символы названия столбца не анализировал
-								break;
-							} 
-							else if (answer == 'b') throw std::invalid_argument("Всех благ");
-							else {
-								std::cout << "Введите нормальный ответ: ";
-								continue;
-							}
-						}
-					}
-
-				}
-				
-				
-			}
-			
-			});
-		if (!failure) {
-		
-			db_column_names.push_back(column_name);
-			count++;
-			
-			std::cout << "Название столбца принято. Столбцы еще будут? ('e' - харэ, 'm' - еще запишем)" << std::endl;
-			while (true) {
-				std::cin >> answer;
-				if (answer == 'e' || answer == 'm') {
-					if (answer == 'e') {
-						enough = true;
-						
-						break;
-					}
-					else if (answer == 'm') break;
-					
-				}
-				else {
-					std::cout << "Введите нормальный ответ: ";
-					continue;
-				}
-			}
-		
-		
-		}
-		if (enough) break;
-
-	}
+std::string PhoneBook::insert_value_into_main_table(std::string column, std::string value) {
+	return
+		"insert into " + this->get_table_name() + "(" + column + ") values('" + value + "');";
 }
-*/
+std::string PhoneBook::insert_value_into_aux_table(int id, std::string value) {
+	return
+		"insert into " + this->get_table_name() + "_aux" + "(phone_book_id, mobile_phone) values('" + std::to_string(id) + "', '" + value + "');";
+}
+
+std::string PhoneBook::add_new_client(std::vector<std::string> input_data) {
+	return
+		"insert into " + this->get_table_name() + "(name, surname, email, has_mobile_phone) values('" + input_data.at(0) + "','" + input_data.at(1) + "','" + input_data.at(2) + "','" + input_data.at(3) + "');";
+}
+
+
 
 
 

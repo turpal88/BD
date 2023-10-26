@@ -3,10 +3,10 @@
 #include "phone_book.hpp"
 #include <stdlib.h>
 #include <iostream>
-#include <cstring>
+#include <string>
 #include <pqxx/pqxx>
 #include "pqxx/nontransaction"
-
+#include "user_interconnection.hpp"
 
 int main() {
 	SetConsoleCP(1251);// установка кодовой страницы win-cp 1251 в поток ввода
@@ -33,6 +33,7 @@ int main() {
 	try {
 
 		pqxx::connection c(connection_string);
+		
 
 		pqxx::nontransaction tx(c);
 
@@ -46,12 +47,13 @@ int main() {
 			std::cout << "Введите название телефонной книги (название таблицы),\nкоторую будем создавать или которая уже должна существовать в БД: ";
 			std::cin >> answer1;
 			if (!my_phone_book.is_name_valid(answer1)) {
-				std::cout << "Введенное имя таблицы содержит недопустимые символы.\n1.Покинуть чат\n2.Ввести название заново\n";
+				std::cout << "Введенное имя таблицы содержит недопустимые символы.\n1.Ввести название заново\n2.Покинуть чат\n";
 				while (true) {
 					std::cin >> answer2;
 					if (answer2 == 1 || answer2 == 2) {
-						if (answer2 == 1) {
+						if (answer2 == 2) {
 							std::cout << "Всех благ";
+							
 							return -1;
 						}
 						else break;
@@ -74,7 +76,7 @@ int main() {
 
 		//очищаем вектора хранения имен в таблице
 		already_existing_tables_in_db.clear();
-		
+
 
 		//сперва проверяем есть ли в базе какие-нибудь таблицы, имена складываем в вектор
 		for (std::tuple<std::string> name : tx.query<std::string>("select table_name from information_schema.tables where table_schema = 'public'")) {
@@ -91,8 +93,10 @@ int main() {
 			//tx.commit();
 			//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 			//tx.query_value<std::string>(my_phone_book.create_new_aux_table());
-			std::cout << "Основная таблица создана" << std::endl;
-			std::cout << "Вспомогательная таблица создана" << std::endl;
+			my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
+			my_phone_book.is_aux_table_created = true; //switch_way = 1; //- вспомогательная таблица создана
+			//std::cout << "Основная таблица создана" << std::endl;
+			//std::cout << "Вспомогательная таблица создана" << std::endl;
 		}
 		else {
 			//проверка чтобы обязательно одну из таблиц звали как в answer1
@@ -109,9 +113,9 @@ int main() {
 							already_existing_columns_in_table_in_db.push_back(std::make_tuple(column_name, is_nullable, udt_name));
 						}
 
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(0)) != "id"
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(0)) != "id"
 							|| std::get<1>(already_existing_columns_in_table_in_db.at(0)) != "NO"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(0)) != "int4") {
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(0)) != "int4") && !my_phone_book.is_main_table_created) {
 
 							system("CLS");
 							std::cout << "В БД таблица с таким названием присутствует. Cтолбец \"id\" некорректен. Выберите дальнейшие действия:" << std::endl;
@@ -131,16 +135,16 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.delete_main_table());
 									//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 									my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Основная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Основная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
 							}
 						}
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(1)) != "name"
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(1)) != "name"
 							|| std::get<1>(already_existing_columns_in_table_in_db.at(1)) != "NO"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(1)) != "varchar") {
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(1)) != "varchar") && !my_phone_book.is_main_table_created) {
 
 							system("CLS");
 							std::cout << "В БД таблица с таким названием присутствует. Cтолбец \"name\" столбец некорректен. Выберите дальнейшие действия:" << std::endl;
@@ -160,17 +164,17 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.delete_main_table());
 									//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 									my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Основная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Основная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
 							}
 						}
 
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(2)) != "surname"
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(2)) != "surname"
 							|| std::get<1>(already_existing_columns_in_table_in_db.at(2)) != "NO"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(2)) != "varchar") {
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(2)) != "varchar") && !my_phone_book.is_main_table_created) {
 							system("CLS");
 							std::cout << "В БД таблица с таким названием присутствует. Cтолбец \"surname\" некорректен. Выберите дальнейшие действия:" << std::endl;
 							std::cout << "1.Удалить текущую таблицу и создать новую структуру телефонной книги (таблицу)" << std::endl;
@@ -189,8 +193,8 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.delete_main_table());
 									//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 									my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Основная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Основная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
@@ -198,9 +202,9 @@ int main() {
 
 						}
 
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(3)) != "email"
-							|| std::get<1>(already_existing_columns_in_table_in_db.at(3)) != "YES"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(3)) != "varchar") {
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(3)) != "email"
+							|| std::get<1>(already_existing_columns_in_table_in_db.at(3)) != "NO"
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(3)) != "varchar") && !my_phone_book.is_main_table_created) {
 							system("CLS");
 							std::cout << "В БД таблица с таким названием присутствует. Cтолбец \"email\" некорректен. Выберите дальнейшие действия:" << std::endl;
 							std::cout << "1.Удалить текущую таблицу и создать новую структуру телефонной книги (таблицу)" << std::endl;
@@ -219,8 +223,8 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.delete_main_table());
 									//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 									my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Основная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Основная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
@@ -228,9 +232,9 @@ int main() {
 
 						}
 
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(4)) != "has_mobile_phone"
-							|| std::get<1>(already_existing_columns_in_table_in_db.at(4)) != "YES"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(4)) != "varchar") {
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(4)) != "has_mobile_phone"
+							|| std::get<1>(already_existing_columns_in_table_in_db.at(4)) != "NO"
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(4)) != "varchar") && !my_phone_book.is_main_table_created) {
 
 							system("CLS");
 							std::cout << "В БД таблица с таким названием присутствует. Cтолбец \"has_mobile_phone\" некорректен. Выберите дальнейшие действия:" << std::endl;
@@ -250,8 +254,8 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.delete_main_table());
 									//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 									my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Основная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Основная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
@@ -265,7 +269,7 @@ int main() {
 
 
 
-						//есил прошли все вышеперечисленные условия, взводим флаг что таблица создана (есть в БД и все стобцы валидны)
+						//если прошли все вышеперечисленные условия, взводим флаг что таблица создана (есть в БД и все стобцы валидны)
 						if (!my_phone_book.is_main_table_created) my_phone_book.is_main_table_created = true;
 
 
@@ -289,8 +293,8 @@ int main() {
 								//tx.query_value<std::string>(my_phone_book.delete_main_table());
 								//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 								my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
-								system("CLS");
-								std::cout << "Основная таблица создана" << std::endl;
+								//system("CLS");
+								//std::cout << "Основная таблица создана" << std::endl;
 								break;
 							}
 							else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
@@ -300,16 +304,16 @@ int main() {
 				//если найдено название вспомогательной таблицы
 				else if (std::get<0>(*it) == answer1 + "_aux") {
 					//запушим в класс имя таблицы чтобы потом легко использовать его
-					my_phone_book.push_table_name(answer1);
-					my_phone_book.aux_table_column_count = tx.query_value<int>("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + std::get<0>(*it) + "_aux'");
+					if (my_phone_book.get_table_name() == "") my_phone_book.push_table_name(answer1);
+					my_phone_book.aux_table_column_count = tx.query_value<int>("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + std::get<0>(*it) + "'");
 					if (my_phone_book.aux_table_column_count == 3) {
 						already_existing_columns_in_table_in_db.clear();
 						for (auto [column_name, is_nullable, udt_name] : tx.query<std::string, std::string, std::string>(my_phone_book.is_aux_table_valid())) {
 							already_existing_columns_in_table_in_db.push_back(std::make_tuple(column_name, is_nullable, udt_name));
 						}
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(0)) != "id"
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(0)) != "id"
 							|| std::get<1>(already_existing_columns_in_table_in_db.at(0)) != "NO"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(0)) != "int4") {
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(0)) != "int4") && !my_phone_book.is_aux_table_created) {
 
 							system("CLS");
 							std::cout << "В БД вспомогательная таблица для основной таблицы присутствует. Cтолбец \"id\" некорректен. Выберите дальнейшие действия:" << std::endl;
@@ -330,17 +334,17 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.create_new_aux_table());
 									my_phone_book.is_aux_table_created = true; //switch_way = 1; //- вспомогательная таблица создана
 									//my_phone_book.switch_way = 1; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Вспомогательная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Вспомогательная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
 							}
 						}
 
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(1)) != "phone_book_id"
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(1)) != "phone_book_id"
 							|| std::get<1>(already_existing_columns_in_table_in_db.at(1)) != "YES"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(1)) != "int4") {
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(1)) != "int4") && !my_phone_book.is_aux_table_created) {
 
 							system("CLS");
 							std::cout << "В БД вспомогательная таблица для основной таблицы присутствует. Cтолбец \"phone_book_id\" некорректен. Выберите дальнейшие действия:" << std::endl;
@@ -361,17 +365,17 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.create_new_aux_table());
 									my_phone_book.is_aux_table_created = true; //switch_way = 1; //- вспомогательная таблица создана
 									//my_phone_book.switch_way = 1; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Вспомогательная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Вспомогательная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
 							}
 						}
 
-						if (std::get<0>(already_existing_columns_in_table_in_db.at(2)) != "mobile_phone"
+						if ((std::get<0>(already_existing_columns_in_table_in_db.at(2)) != "mobile_phone"
 							|| std::get<1>(already_existing_columns_in_table_in_db.at(2)) != "YES"
-							|| std::get<2>(already_existing_columns_in_table_in_db.at(2)) != "varchar") {
+							|| std::get<2>(already_existing_columns_in_table_in_db.at(2)) != "varchar") && !my_phone_book.is_aux_table_created) {
 
 							system("CLS");
 							std::cout << "В БД вспомогательная таблица для основной таблицы присутствует. Cтолбец \"mobile_phone\" некорректен. Выберите дальнейшие действия:" << std::endl;
@@ -392,13 +396,16 @@ int main() {
 									//tx.query_value<std::string>(my_phone_book.create_new_aux_table());
 									my_phone_book.is_aux_table_created = true; //switch_way = 1; //- вспомогательная таблица создана
 									//my_phone_book.switch_way = 1; //switch_way = 1; //- основная таблица создана
-									system("CLS");
-									std::cout << "Вспомогательная таблица создана" << std::endl;
+									//system("CLS");
+									//std::cout << "Вспомогательная таблица создана" << std::endl;
 									break;
 								}
 								else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
 							}
 						}
+
+						// если прошли все вышеперечисленные условия, взводим флаг что таблица создана(есть в БД и все стобцы валидны)
+						if (!my_phone_book.is_aux_table_created) my_phone_book.is_aux_table_created = true;
 					}
 					else {
 						system("CLS");
@@ -419,8 +426,8 @@ int main() {
 								//tx.query_value<std::string>(my_phone_book.delete_aux_table());
 								//tx.query_value<std::string>(my_phone_book.create_new_aux_table());
 								my_phone_book.is_aux_table_created = true; //switch_way = 1; //- вспомогательная таблица создана
-								system("CLS");
-								std::cout << "Вспомогательная таблица создана" << std::endl;
+								//system("CLS");
+								//std::cout << "Вспомогательная таблица создана" << std::endl;
 								break;
 							}
 							else if (my_phone_book.ask_ans_cycle_request(answer2) == 2) return -1;
@@ -429,6 +436,7 @@ int main() {
 				}
 				//если перебрали все имена таблиц в базе и phone_book нет, сообщаем об этом
 				if (it == already_existing_tables_in_db.end() - 1) {
+					my_phone_book.push_table_name(answer1);
 					if (!my_phone_book.is_main_table_created) {
 						system("CLS");
 						std::cout << "В БД отсутствует основная таблица с таким названием. Выберите дальнейшие действия:" << std::endl;
@@ -446,8 +454,8 @@ int main() {
 								//tx.query_value<std::string>(my_phone_book.create_new_main_table());
 								//tx.query_value<std::string>(my_phone_book.create_new_aux_table());
 								my_phone_book.is_main_table_created = true; //switch_way = 1; //- основная таблица создана
-								system("CLS");
-								std::cout << "Основная таблица создана" << std::endl;
+								//system("CLS");
+								//std::cout << "Основная таблица создана" << std::endl;
 								//my_phone_book.is_aux_table_created = true; //switch_way = 1; //- вспомогательная таблица создана
 								break;
 							}
@@ -468,11 +476,11 @@ int main() {
 							else if (my_phone_book.ask_ans_cycle_request(answer2) == 1) {
 								tx.exec(my_phone_book.create_new_aux_table());
 								//tx.commit();
-								
+
 								//tx.query_value<std::string>(my_phone_book.create_new_aux_table());
 								my_phone_book.is_aux_table_created = true; //switch_way = 1; //- основная таблица создана
-								system("CLS");
-								std::cout << "Вспомогательная таблица создана" << std::endl;
+								//system("CLS");
+								//std::cout << "Вспомогательная таблица создана" << std::endl;
 								//my_phone_book.is_aux_table_created = true; //switch_way = 1; //- вспомогательная таблица создана
 								break;
 							}
@@ -482,137 +490,39 @@ int main() {
 				}
 			} /*конец цикла*/
 		}
+		system("CLS");
+		if (my_phone_book.is_main_table_created) std::cout << "Основная таблица создана" << std::endl;
+		if (my_phone_book.is_aux_table_created) std::cout << "Вспомогательная таблица создана" << std::endl;
+
+		/*Работа с данными в таблицах БД */
+		
+		UserAction ua;
+		int operation_index = -1;
+		while (operation_index != 7) {
+			ua.user_interconnection(operation_index);
+			switch (operation_index) {
+			case(1):
+				tx.exec(my_phone_book.add_new_client(ua.input_data));
+				if (ua.input_data.size() > 4) {
+					int client_id = tx.query_value<int>("select id from " + my_phone_book.get_table_name() + "where name = '" + ua.input_data.at(0) + "' and surname = '" + ua.input_data.at(1) + "'");
+					for (int i = 4; i < ua.input_data.size(); i++) {
+						tx.exec(my_phone_book.insert_value_into_aux_table(client_id, ua.input_data.at(i)));
+					}
+				}
+				std::cout << std::endl;
+				std::cout << "Клиент успешно добавлен в телефонную книгу" << std::endl;
+				break;
+			}
+		}
+		
+		
 
 		
-			
+		
 
+		/*-------------*/
 
-
-
-
-
-
-
-						//for (std::tuple<std::string> column_name : tx.query<std::string>(
-						//	"SELECT column_name from information_schema.columns where table_name='" + std::get<0>(*it) + "'"
-						//	))
-						//{
-						//	temp_vector_with_current_column_names.push_back(column_name);
-							//std::cout << ordinal_position << "." << column_name << " (" << data_type << ")" << std::endl;
-					//	}
-						//std::cout << std::endl;
-						//std::cout << "Данная таблица содержит " << tx.query_value<int>("SELECT COUNT(*) FROM " + std::get<0>(*it)) << " записей" << std::endl;
-
-
-
-				//если таблицы с таким названием нет, сообщаем об этом
-
-
-
-
-
-
-			
-
-			/*
-			//проверка что одна из таблиц - phone_book а вторая - связанная с ней
-			for (auto it = already_existing_tables_in_db.begin(); it != already_existing_tables_in_db.end(); ++it) {
-				std::cout << std::endl;
-				std::cout << std::get<0>(*it) << std::endl; //вывод имени таблицы на печать
-
-				int col_count = tx.query_value<int>("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + std::get<0>(*it) + "'");
-				if (col_count > 0) {
-					/*
-					for (auto [ordinal_position, column_name, data_type] : tx.query<int, std::string, std::string>(
-						"SELECT ordinal_position, column_name, data_type from information_schema.columns where table_name='" + std::get<0>(*it) + "'"
-						))
-					{
-						//temp_vector_with_current_column_names.push_back(column_name);
-						std::cout << ordinal_position << "." << column_name << " (" << data_type << ")" << std::endl;
-					}
-					std::cout << std::endl;
-					*/
-					//std::string s = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + std::get<0>(*it) + "'";
-
-			//	}
-
-		//	}
-			/*
-			if (already_existing_tables_in_db.size() > 0) {
-
-				std::cout << "БД уже содержит таблицы. Вот их список:" << std::endl;
-
-
-			}
-			//std::string s = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'phone_book'";
-			//char answer1;
-			//int current_column_count = tx.query_value<int>(s);
-			if (current_column_count > 0) {
-				//std::vector<std::string> temp_vector_with_current_column_names;
-				std::cout << "БД уже содержит столбцы. Вот их список:" << std::endl;
-				for (auto [ordinal_position, column_name, data_type] : tx.query<int, std::string, std::string>(
-					"SELECT ordinal_position, column_name, data_type from information_schema.columns where table_name='phone_book'"
-				))
-				{
-					//temp_vector_with_current_column_names.push_back(column_name);
-					std::cout << ordinal_position << "." << column_name << " (" << data_type << ")" << std::endl;
-				}
-
-				std::cout << std::endl;
-				std::cout << "Будем удалять все столбцы и создавать заново или работать с тем что есть? \n('y' - удаляем столбцы и пишем заново, 'n' - оставляем как есть)";
-				while (true) {
-					std::cin >> answer1;
-					if (answer1 == 'y') {
-						//std::string drop_from_db_column;
-
-						//	drop_from_db_column += "drop table if exists " + s + "cascade; ";
-
-						tx.exec("drop table if exists phone_book cascade;");
-
-						//tx.commit();
-						if (tx.query_value<int>(s) == 0) {
-							std::cout << std::endl;
-							std::cout << "Столбцы грохнули, можем заполняться" << std::endl;
-							break;
-						}
-						else throw std::invalid_argument("При удалении столбцов в БД произошло что-то ужасное. Останавливаю всю работу");
-
-					}
-					if (answer1 == 'n') {
-						my_phone_book.is_needed_to_define_own_column_names = false;
-						break;
-					}
-					else {
-						std::cout << "Введите нормальный ответ: ";
-						continue;
-					}
-				}
-			}
-			if (my_phone_book.is_needed_to_define_own_column_names) {
-				my_phone_book.set_db_fields();
-
-				//int mt = tx.query_value<int>(s);
-				//std::cout << mt << std::endl;
-				std::string create_db_query = "CREATE TABLE IF NOT EXISTS phone_book(";
-				for (int i = 0; i < my_phone_book.db_column_names.size(); i++) {
-					if (i == 0) create_db_query += "id INTEGER PRIMARY KEY NOT NULL, ";
-					else if (i < my_phone_book.db_column_names.size() - 1) create_db_query += my_phone_book.db_column_names.at(i) + " VARCHAR(50),";
-					else if (i == my_phone_book.db_column_names.size() - 1) create_db_query += my_phone_book.db_column_names.at(i) + " VARCHAR(50));";
-				}
-				tx.exec(create_db_query);
-				std::string create_reference_table = "CREATE TABLE IF NOT EXISTS " + my_phone_book.db_column_names.at(0) + "_" + my_phone_book.db_column_names.at(my_phone_book.db_column_names.size() - 1) + "("
-					+ my_phone_book.db_column_names.at(my_phone_book.db_column_names.size() - 1) + "_" + my_phone_book.db_column_names.at(0) + " INTEGER REFERENCES phone_book(id), "
-					+ my_phone_book.db_column_names.at(my_phone_book.db_column_names.size() - 1) + " VARCHAR(50));";
-				tx.exec(create_reference_table);
-				//tx.commit();
-				//create_db_query.clear();
-			}
-
-
-
-
-	*/
-		}
+	}
 	
 		catch (pqxx::sql_error& e) {
 
@@ -629,7 +539,7 @@ int main() {
 			return -1;
 		}
 		catch (pqxx::unexpected_rows& e) {
-			std::cout << "Ошибка удаления сущетсвующей таблицы" << std::endl;
+			std::cout << "Ошибка удаления существующей таблицы" << std::endl;
 			return -1;
 		}
 

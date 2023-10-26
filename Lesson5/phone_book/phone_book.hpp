@@ -4,6 +4,8 @@
 
 #include  <conio.h>
 #include <algorithm>
+#include <iostream>
+
 class PhoneBook {
 	public:
 		PhoneBook();
@@ -35,7 +37,18 @@ class PhoneBook {
 		bool is_aux_table_created; //флаг создания корректной вспомогательной таблицы в БД
 		int main_table_column_count;
 		int aux_table_column_count;
+		//bool check_value(std::string value_type, std::string value);
+		std::string check_duplicate_client(std::string name, std::string surname);
+		//std::string check_client_name(std::string name);
+		//std::string check_client_surname(std::string surname);
+		//std::string check_client_email(std::string email);
+		//std::string check_client_mobile_phone(std::string mobile_phone);
+		std::string insert_value_into_main_table(std::string column, std::string value);
+		std::string insert_value_into_aux_table(int id, std::string value);
 
+		//void adding_new_client_data_validation(std::string value_type, std::string& value);
+		std::string add_new_client(std::vector<std::string> input_data);
+		
 
     private:
 		std::string host_name;
@@ -48,6 +61,8 @@ class PhoneBook {
 		std::vector<int> allowed_ascii_values;
 		std::vector<int> allowed_ascii_values_for_table_values;
 		std::string table_name;
+
+		
 		//std::vector<int> db_column_count;
 		
 		//void push_columns_in_db();

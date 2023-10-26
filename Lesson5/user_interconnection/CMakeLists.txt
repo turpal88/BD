@@ -1,0 +1,2 @@
+set(CMAKE_CXX_STANDARD 17)
+add_library(user_interconnection STATIC user_interconnection.cpp)
