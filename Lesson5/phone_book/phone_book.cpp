@@ -37,7 +37,7 @@ PhoneBook::PhoneBook() {
 void PhoneBook::set_db_connection_parameters() {
 	std::vector<char> _password;
 	char c = ' ';
-	std::cout << "Введите параметры для входа в базу данных: " << std::endl;
+	std::cout << "Введите параметры для входа в БД: " << std::endl;
 	std::cout << "host: "; std::cin >> host_name;
 	std::cout << "port: "; std::cin >> port;
 	std::cout << "dbname: "; std::cin >> dbname;
@@ -153,7 +153,7 @@ std::string PhoneBook::is_aux_table_valid() {
 std::string PhoneBook::check_duplicate_client(std::string name, std::string surname) {
 	return
 		"select name, surname from " + this->get_table_name()
-		+ "where name='" + name + "' and surname='" + surname + "'";
+		+ " where name='" + name + "' and surname='" + surname + "'";
 }
 
 

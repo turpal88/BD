@@ -1,4 +1,4 @@
-#include"user_interconnection.hpp"
+ï»¿#include"user_interconnection.hpp"
 UserAction::UserAction() {
 	answer = 0;
 	step = 0;
@@ -10,10 +10,10 @@ UserAction::UserAction() {
 
 bool UserAction::check_value(std::string value_type, std::string value) {
 	std::regex txt_regex;
-	if (value_type == "name" || value_type == "surname") txt_regex = "[À-ß]{1}[à-ÿ]+[ -]?([À-ß]{1}[à-ÿ]+)?";
+	if (value_type == "name" || value_type == "surname") txt_regex = "[Ð-Ð¯A-Z]{1}[a-zÐ°-Ñ]+[ -]?([Ð-Ð¯A-Z]{1}[a-zÐ°-Ñ]+)?";
 	else if (value_type == "email") txt_regex = "([a-z0-9_-]+\.)+[a-z0-9_-]+@[a-z0-9-]+(\.[a-z]{2,3}){1,2}";
 	else if (value_type == "mobile_phone" || value_type == "one_more_mobile_phone") txt_regex = "\\+[1-9]{1,2}[0-9]{3,4}[0-9]{6,7}";
-	else throw std::invalid_argument("Íåâåðíî ïåðåäàíà ñòðîêà");
+	else throw std::invalid_argument("ÐÐµÐ²ÐµÑ€Ð½Ð¾ Ð¿ÐµÑ€ÐµÐ´Ð°Ð½Ð° ÑÑ‚Ñ€Ð¾ÐºÐ°");
 	return std::regex_match(value, txt_regex);
 
 
@@ -34,16 +34,16 @@ void UserAction::adding_new_client_data_validation(std::string value_type, std::
 		while (step > 0) {
 			switch (step) {
 			case(1):
-				std::cout << "Ââåäèòå èìÿ: "; step = 5;
+				std::cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð¸Ð¼Ñ: "; step = 5;
 				break;
 			case(2):
-				std::cout << "Ââåäèòå ôàìèëèþ: "; step = 5;
+				std::cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ñ„Ð°Ð¼Ð¸Ð»Ð¸ÑŽ: "; step = 5;
 				break;
 			case(3):
-				std::cout << "Ââåäèòå email: "; step = 5;
+				std::cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ email: "; step = 5;
 				break;
 			case(4):
-				std::cout << "Ââåäèòå íîìåð òåëåôîíà: "; step = 5;
+				std::cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð½Ð¾Ð¼ÐµÑ€ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ð°: "; step = 5;
 				break;
 			case(5):
 				value.erase();
@@ -55,16 +55,17 @@ void UserAction::adding_new_client_data_validation(std::string value_type, std::
 				break;
 			case(6):
 				if (!this->check_value(value_type, value)) {
-					if (value_type == "name") std::cout << "Èìÿ íåâàëèäíî. ";
-					else if (value_type == "surname") std::cout << "Ôàìèëèÿ íåâàëèäíà. ";
-					else if (value_type == "email") std::cout << "email íåâàëèäåí. ";
-					else if (value_type == "mobile_phone" || value_type == "one_more_mobile_phone") std::cout << "Íîìåð òåëåôîíà íåâàëèäåí. ";
-					std::cout << "×òî äàëüøå?\n1.Ââåñòè çàíîâî\n2.Â ìåíþ äåéñòâèé\n";
+					if (value_type == "name") std::cout << "Ð˜Ð¼Ñ Ð½ÐµÐ²Ð°Ð»Ð¸Ð´Ð½Ð¾. ";
+					else if (value_type == "surname") std::cout << "Ð¤Ð°Ð¼Ð¸Ð»Ð¸Ñ Ð½ÐµÐ²Ð°Ð»Ð¸Ð´Ð½Ð°. ";
+					else if (value_type == "email") std::cout << "email Ð½ÐµÐ²Ð°Ð»Ð¸Ð´ÐµÐ½. ";
+					else if (value_type == "mobile_phone" || value_type == "one_more_mobile_phone") std::cout << "ÐÐ¾Ð¼ÐµÑ€ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ð° Ð½ÐµÐ²Ð°Ð»Ð¸Ð´ÐµÐ½. ";
+					std::cout << "Ð§Ñ‚Ð¾ Ð´Ð°Ð»ÑŒÑˆÐµ?\n1.Ð’Ð²ÐµÑÑ‚Ð¸ Ð·Ð°Ð½Ð¾Ð²Ð¾\n2.Ð’ Ð¼ÐµÐ½ÑŽ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ð¹\n";
 					step = 7;
 					
 				}
 				else { 
-					if (value_type != "one_more_mobile_phone") { this->input_data.push_back(value); step = 0; }
+					this->input_data.push_back(value);
+					if (value_type != "one_more_mobile_phone") step = 0;
 					else step = 10;
 				}
 				break;
@@ -76,7 +77,7 @@ void UserAction::adding_new_client_data_validation(std::string value_type, std::
 				else step = 9;
 				break;
 			case(8):
-				std::cout << "Ââåäèòå íîðìàëüíûé îòâåò" << std::endl;
+				std::cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð½Ð¾Ñ€Ð¼Ð°Ð»ÑŒÐ½Ñ‹Ð¹ Ð¾Ñ‚Ð²ÐµÑ‚" << std::endl;
 				step = 7;
 				break;
 			case(9):
@@ -94,7 +95,7 @@ void UserAction::adding_new_client_data_validation(std::string value_type, std::
 				}
 				break;
 			case(10):
-				std::cout << "Áóäåì ââîäèòü åùå îäèí íîìåð òåëåôîíà?(1 - yes/2 - no)";
+				std::cout << "Ð‘ÑƒÐ´ÐµÐ¼ Ð²Ð²Ð¾Ð´Ð¸Ñ‚ÑŒ ÐµÑ‰Ðµ Ð¾Ð´Ð¸Ð½ Ð½Ð¾Ð¼ÐµÑ€ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ð°?(1 - yes/2 - no)";
 				step = 7;
 				break;
 			
@@ -103,11 +104,11 @@ void UserAction::adding_new_client_data_validation(std::string value_type, std::
 		}
 	}
 	else if (value_type == "has_mobile_phone") {
-		std::cout << "Êëèåíò èìååò ìîáèëüíûé òåëåôîí?(1 - yes/2 - no) ";
+		std::cout << "ÐšÐ»Ð¸ÐµÐ½Ñ‚ Ð¸Ð¼ÐµÐµÑ‚ Ð¼Ð¾Ð±Ð¸Ð»ÑŒÐ½Ñ‹Ð¹ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½?(1 - yes/2 - no) ";
 		while (true) {
 			std::cin >> answer;
 			if (answer != 1 && answer != 2) {
-				std::cout << "Ââåäèòå íîðìàëüíûé îòâåò" << std::endl;
+				std::cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð½Ð¾Ñ€Ð¼Ð°Ð»ÑŒÐ½Ñ‹Ð¹ Ð¾Ñ‚Ð²ÐµÑ‚" << std::endl;
 				continue;
 			}
 			else {
@@ -122,7 +123,7 @@ void UserAction::adding_new_client_data_validation(std::string value_type, std::
 		}
 
 	}
-	else throw std::invalid_argument("Òèïîì ïðîâåðÿåìîé ñòðîêè â ìåòîä ïåðåäàíî ÷òî ïîïàëî\n");
+	else throw std::invalid_argument("Ð¢Ð¸Ð¿Ð¾Ð¼ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼Ð¾Ð¹ ÑÑ‚Ñ€Ð¾ÐºÐ¸ Ð² Ð¼ÐµÑ‚Ð¾Ð´ Ð¿ÐµÑ€ÐµÐ´Ð°Ð½Ð¾ Ñ‡Ñ‚Ð¾ Ð¿Ð¾Ð¿Ð°Ð»Ð¾\n");
 
 }
 
@@ -136,10 +137,10 @@ void UserAction::user_interconnection(int& operation_index) {
 		case(0):
 			this->input_data.clear();
 			std::cout << std::endl;
-			std::cout << "Âûáåðèòå äàëüíåéøèå äåéñòâèÿ ñ òåëåôîííîé êíèãîé:\n1.Äîáàâèòü êëèåíòà\n2.Äîáàâèòü òåëåôîí äëÿ ñóùåñòâóþùåãî êëèåíòà\n";
-			std::cout << "3.Èçìåíèòü äàííûå î êëèåíòå\n4.Óäàëèòü òåëåôîí ó ñóùåñòâóþùåãî êëèåíòà\n5.Óäàëèòü ñóùåñòâóþùåãî êëèåíòà\n";
-			std::cout << "6.Íàéòè êëèåíòà ïî åãî äàííûì - èìåíè, ôàìèëèè, email èëè òåëåôîíó\n";
-			std::cout << "7.Çàâåðøèòü ðàáîòó\n";
+			std::cout << "Ð’Ñ‹Ð±ÐµÑ€Ð¸Ñ‚Ðµ Ð´Ð°Ð»ÑŒÐ½ÐµÐ¹ÑˆÐ¸Ðµ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ Ñ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ð½Ð¾Ð¹ ÐºÐ½Ð¸Ð³Ð¾Ð¹:\n1.Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°\n2.Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½ Ð´Ð»Ñ ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰ÐµÐ³Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°\n";
+			std::cout << "3.Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ Ð´Ð°Ð½Ð½Ñ‹Ðµ Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ðµ\n4.Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½ Ñƒ ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰ÐµÐ³Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°\n5.Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰ÐµÐ³Ð¾ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð°\n";
+			std::cout << "6.ÐÐ°Ð¹Ñ‚Ð¸ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ð° Ð¿Ð¾ ÐµÐ³Ð¾ Ð´Ð°Ð½Ð½Ñ‹Ð¼ - Ð¸Ð¼ÐµÐ½Ð¸, Ñ„Ð°Ð¼Ð¸Ð»Ð¸Ð¸, email Ð¸Ð»Ð¸ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ñƒ\n";
+			std::cout << "7.Ð—Ð°Ð²ÐµÑ€ÑˆÐ¸Ñ‚ÑŒ Ñ€Ð°Ð±Ð¾Ñ‚Ñƒ\n";
 			this->step = 8;
 			break;
 		case(1):
@@ -187,7 +188,7 @@ void UserAction::user_interconnection(int& operation_index) {
 					break;
 				}
 				if (i == 7 && this->answer != i) {
-					std::cout << "Ââåäèòå íîðìàëüíûé îòâåò\n"; 
+					std::cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð½Ð¾Ñ€Ð¼Ð°Ð»ÑŒÐ½Ñ‹Ð¹ Ð¾Ñ‚Ð²ÐµÑ‚\n"; 
 					break;
 				}
 			}

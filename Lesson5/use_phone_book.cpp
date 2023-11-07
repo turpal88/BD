@@ -9,6 +9,7 @@
 #include "user_interconnection.hpp"
 
 int main() {
+	//setlocale(LC_ALL, "");
 	SetConsoleCP(1251);// установка кодовой страницы win-cp 1251 в поток ввода
 	SetConsoleOutputCP(1251); // установка кодовой страницы win-cp 1251 в поток вывода
 
@@ -38,12 +39,16 @@ int main() {
 		pqxx::nontransaction tx(c);
 
 		std::cout << std::endl;
+
+		
+		
+
 		//создаем буферную переменную для хранения ответов на всякие каверзные вопросы
 		std::string answer1;
 		//спрашиваем как будет называться или уже должна называться наша таблица (телефонная книга)
 		int answer2; //переменная для ответа на вопрос о дальнейших действиях
 		while (true) {
-			system("CLS");
+			//system("CLS");
 			std::cout << "Введите название телефонной книги (название таблицы),\nкоторую будем создавать или которая уже должна существовать в БД: ";
 			std::cin >> answer1;
 			if (!my_phone_book.is_name_valid(answer1)) {
@@ -73,7 +78,9 @@ int main() {
 		std::vector<std::tuple<std::string>> already_existing_tables_in_db;
 		std::vector<std::tuple<std::string, std::string, std::string>> already_existing_columns_in_table_in_db;
 		//std::vector<std::tuple<std::string>> temp_vector_with_current_column_names;
-
+		//имя и фамилия для проверки дубликата клиента в БД
+		std::string poped_name_surname_from_table[2] = {"",""};
+		
 		//очищаем вектора хранения имен в таблице
 		already_existing_tables_in_db.clear();
 
@@ -500,11 +507,21 @@ int main() {
 		int operation_index = -1;
 		while (operation_index != 7) {
 			ua.user_interconnection(operation_index);
+			poped_name_surname_from_table[0] = ""; poped_name_surname_from_table[1] = "";
+			for (auto [poped_name, poped_surname] : tx.query<std::string, std::string>(my_phone_book.check_duplicate_client(ua.input_data.at(0), ua.input_data.at(1)))) {
+				poped_name_surname_from_table[0] = poped_name;
+				poped_name_surname_from_table[1] = poped_surname;
+			}
+			if (poped_name_surname_from_table[0] != "") {
+				std::cout << "\nКлиент с таким именем и фамилией уже существует в базе\n\n";
+				continue;
+			}
 			switch (operation_index) {
 			case(1):
+				
 				tx.exec(my_phone_book.add_new_client(ua.input_data));
 				if (ua.input_data.size() > 4) {
-					int client_id = tx.query_value<int>("select id from " + my_phone_book.get_table_name() + "where name = '" + ua.input_data.at(0) + "' and surname = '" + ua.input_data.at(1) + "'");
+					int client_id = tx.query_value<int>("select id from " + my_phone_book.get_table_name() + " where name = '" + ua.input_data.at(0) + "' and surname = '" + ua.input_data.at(1) + "'");
 					for (int i = 4; i < ua.input_data.size(); i++) {
 						tx.exec(my_phone_book.insert_value_into_aux_table(client_id, ua.input_data.at(i)));
 					}

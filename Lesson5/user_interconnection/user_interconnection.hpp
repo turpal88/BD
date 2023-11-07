@@ -1,4 +1,4 @@
-#include <iostream>
+п»ї#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -10,12 +10,12 @@ public:
 	int answer;
 	int step;
 	int iteration_count;
-	//буферный вектор куда будут складываться вводимые пользователем значения
+	//Р±СѓС„РµСЂРЅС‹Р№ РІРµРєС‚РѕСЂ РєСѓРґР° Р±СѓРґСѓС‚ СЃРєР»Р°РґС‹РІР°С‚СЊСЃСЏ РІРІРѕРґРёРјС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј Р·РЅР°С‡РµРЅРёСЏ
 	std::vector<std::string> input_data;
 	
 	bool check_value(std::string value_type, std::string value);
-	UserAction(const UserAction& ua) = delete; //запрет конструктора копирования
-	UserAction& operator=(const UserAction& ua) = delete; //запрет оператора присваивания
+	UserAction(const UserAction& ua) = delete; //Р·Р°РїСЂРµС‚ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂР° РєРѕРїРёСЂРѕРІР°РЅРёСЏ
+	UserAction& operator=(const UserAction& ua) = delete; //Р·Р°РїСЂРµС‚ РѕРїРµСЂР°С‚РѕСЂР° РїСЂРёСЃРІР°РёРІР°РЅРёСЏ
 	UserAction();
 	void adding_new_client_data_validation(std::string value_type, std::string& value);
 	void user_interconnection(int& operation_index);
