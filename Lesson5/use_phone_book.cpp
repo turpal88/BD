@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+
 #include <pqxx/pqxx>
 #include "pqxx/nontransaction"
 #include "user_interconnection.hpp"
@@ -79,8 +80,9 @@ int main() {
 		std::vector<std::tuple<std::string, std::string, std::string>> already_existing_columns_in_table_in_db;
 		//std::vector<std::tuple<std::string>> temp_vector_with_current_column_names;
 		//имя и фамилия для проверки дубликата клиента в БД
-		std::string poped_name_surname_from_table[2] = {"",""};
-		
+		std::string poped_name_surname_email_has_mobile_phone_from_table[4] = {"","","",""};
+		std::vector<std::string> poped_mobile_phones_from_table;
+		std::vector<int> poped_client_id_from_table;
 		//очищаем вектора хранения имен в таблице
 		already_existing_tables_in_db.clear();
 
@@ -500,35 +502,253 @@ int main() {
 		system("CLS");
 		if (my_phone_book.is_main_table_created) std::cout << "Основная таблица создана" << std::endl;
 		if (my_phone_book.is_aux_table_created) std::cout << "Вспомогательная таблица создана" << std::endl;
-
+		c.set_client_encoding("WIN1251");
+		std::cout << c.get_client_encoding() << "\n";
 		/*Работа с данными в таблицах БД */
 		
 		UserAction ua;
 		int operation_index = -1;
 		while (operation_index != 7) {
+			
 			ua.user_interconnection(operation_index);
-			poped_name_surname_from_table[0] = ""; poped_name_surname_from_table[1] = "";
-			for (auto [poped_name, poped_surname] : tx.query<std::string, std::string>(my_phone_book.check_duplicate_client(ua.input_data.at(0), ua.input_data.at(1)))) {
-				poped_name_surname_from_table[0] = poped_name;
-				poped_name_surname_from_table[1] = poped_surname;
-			}
-			if (poped_name_surname_from_table[0] != "") {
-				std::cout << "\nКлиент с таким именем и фамилией уже существует в базе\n\n";
-				continue;
-			}
+			
+			
 			switch (operation_index) {
 			case(1):
-				
+				for (auto& n : poped_name_surname_email_has_mobile_phone_from_table) n = "";
+				for (auto [poped_name, poped_surname] : tx.query<std::string, std::string>(my_phone_book.check_duplicate_client(ua.input_data.at(0), ua.input_data.at(1)))) {
+					poped_name_surname_email_has_mobile_phone_from_table[0] = poped_name;
+					poped_name_surname_email_has_mobile_phone_from_table[1] = poped_surname;
+				}
+				if (poped_name_surname_email_has_mobile_phone_from_table[0] != "") {
+					std::cout << "\nКлиент с таким именем и фамилией уже существует в базе\n\n"; 
+					operation_index = -1;
+					break;
+				}
 				tx.exec(my_phone_book.add_new_client(ua.input_data));
 				if (ua.input_data.size() > 4) {
-					int client_id = tx.query_value<int>("select id from " + my_phone_book.get_table_name() + " where name = '" + ua.input_data.at(0) + "' and surname = '" + ua.input_data.at(1) + "'");
+					//int client_id = tx.query_value<int>("select id from " + my_phone_book.get_table_name() + " where name = '" + ua.input_data.at(0) + "' and surname = '" + ua.input_data.at(1) + "'");
 					for (int i = 4; i < ua.input_data.size(); i++) {
-						tx.exec(my_phone_book.insert_value_into_aux_table(client_id, ua.input_data.at(i)));
+						tx.exec(my_phone_book.insert_value_into_aux_table(tx.query_value<int>(my_phone_book.get_client_id(ua.input_data.at(0), ua.input_data.at(1))), ua.input_data.at(i)));
 					}
 				}
 				std::cout << std::endl;
-				std::cout << "Клиент успешно добавлен в телефонную книгу" << std::endl;
+				std::cout << "Клиент успешно добавлен в телефонную книгу" << std::endl; 
+				operation_index = -1;
 				break;
+			case(2):
+				for (auto& n : poped_name_surname_email_has_mobile_phone_from_table) n = "";
+				poped_mobile_phones_from_table.erase(poped_mobile_phones_from_table.begin(), poped_mobile_phones_from_table.end());
+				for (auto [poped_name, poped_surname] : tx.query<std::string, std::string>(my_phone_book.check_duplicate_client(ua.input_data.at(0), ua.input_data.at(1)))) {
+					poped_name_surname_email_has_mobile_phone_from_table[0] = poped_name;
+					poped_name_surname_email_has_mobile_phone_from_table[1] = poped_surname;
+				}
+				if (poped_name_surname_email_has_mobile_phone_from_table[0] == "") {
+					std::cout << "\nКлиента с таким именем и фамилией в базе не найдено\n\n";
+					operation_index = -1;
+					break;
+				}
+				else {
+					for (const auto& n : tx.query<std::string>(my_phone_book.get_mobile_phone(ua.input_data.at(0), ua.input_data.at(1), tx.query_value<int>(my_phone_book.get_client_id(ua.input_data.at(0), ua.input_data.at(1)))))) {
+						poped_mobile_phones_from_table.push_back(std::get<0>(n));
+					}
+					
+					if (poped_mobile_phones_from_table.size() == 0) {
+						for (int i = 2; i < ua.input_data.size(); i++) {
+							tx.exec(my_phone_book.insert_value_into_aux_table(tx.query_value<int>(my_phone_book.get_client_id(ua.input_data.at(0), ua.input_data.at(1))), ua.input_data.at(i)));
+						}
+					}
+					else {
+						for (int i = 2; i < ua.input_data.size(); i++) {
+							if (std::find(poped_mobile_phones_from_table.begin(), poped_mobile_phones_from_table.end(), ua.input_data.at(i)) == poped_mobile_phones_from_table.end())
+
+								tx.exec(my_phone_book.insert_value_into_aux_table(tx.query_value<int>(my_phone_book.get_client_id(ua.input_data.at(0), ua.input_data.at(1))), ua.input_data.at(i)));
+							else {
+								std::cout << "\nНомер телефона " + ua.input_data.at(i) + " уже записан в телефонной книге и повторно записан не будет\n";
+								continue;
+							}
+						}
+					}
+					//int client_id = tx.query_value<int>("select id from " + my_phone_book.get_table_name() + " where name = '" + ua.input_data.at(0) + "' and surname = '" + ua.input_data.at(1) + "'");
+					
+					if (tx.query_value<std::string>(my_phone_book.get_is_client_has_mobile_phone(ua.input_data.at(0), ua.input_data.at(1))) == "no")
+						tx.exec(my_phone_book.put_is_client_has_mobile_phone(ua.input_data.at(0), ua.input_data.at(1), "yes"));
+					std::cout << "Введенные номера телефонов успешно добавлены к клиенту " + ua.input_data.at(0) + " " + ua.input_data.at(1) + "\n";
+					operation_index = -1;
+
+				}
+				
+				break;
+			case(3):
+				
+					for (auto& n : poped_name_surname_email_has_mobile_phone_from_table) n = "";
+					poped_mobile_phones_from_table.erase(poped_mobile_phones_from_table.begin(), poped_mobile_phones_from_table.end());
+					for (auto [poped_name, poped_surname] : tx.query<std::string, std::string>(my_phone_book.check_duplicate_client(ua.input_data.at(0), ua.input_data.at(1)))) {
+						poped_name_surname_email_has_mobile_phone_from_table[0] = poped_name;
+						poped_name_surname_email_has_mobile_phone_from_table[1] = poped_surname;
+					}
+					if (poped_name_surname_email_has_mobile_phone_from_table[0] == "") {
+						std::cout << "\nКлиента с таким именем и фамилией в базе не найдено\n\n";
+						operation_index = -1;
+						//break;
+					}
+					else {
+						poped_name_surname_email_has_mobile_phone_from_table[2] = tx.query_value<std::string>(my_phone_book.get_client_email(ua.input_data.at(0), ua.input_data.at(1)));
+						poped_name_surname_email_has_mobile_phone_from_table[3] = tx.query_value<std::string>(my_phone_book.get_is_client_has_mobile_phone(ua.input_data.at(0), ua.input_data.at(1)));
+						std::cout << "\nДанные клиента:\n";
+						//for (int i = 0; i < 4; i++) {
+							std::cout << "Имя: " << poped_name_surname_email_has_mobile_phone_from_table[0] << "\n";
+							std::cout << "Фамилия: " << poped_name_surname_email_has_mobile_phone_from_table[1] << "\n";
+							std::cout << "email: " << poped_name_surname_email_has_mobile_phone_from_table[2] << "\n";
+						//}
+						if (poped_name_surname_email_has_mobile_phone_from_table[3] == "yes") {
+							for (const auto& n : tx.query<std::string>(my_phone_book.get_mobile_phone(ua.input_data.at(0), ua.input_data.at(1), tx.query_value<int>(my_phone_book.get_client_id(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1]))))) {
+								poped_mobile_phones_from_table.push_back(std::get<0>(n));
+							}
+							for (int i = 0; i < poped_mobile_phones_from_table.size(); i++) {
+								std::cout << std::to_string(i + 1) + "-й телефон: " << poped_mobile_phones_from_table[i] << "\n";
+								ua.mobile_phone_count++;
+							}
+						}
+						ua.change_client_data_flag = true;
+					}
+				
+				
+				
+				
+				break;
+			case(4):
+				for (auto& n : poped_name_surname_email_has_mobile_phone_from_table) n = "";
+				poped_mobile_phones_from_table.erase(poped_mobile_phones_from_table.begin(), poped_mobile_phones_from_table.end());
+				for (auto [poped_name, poped_surname] : tx.query<std::string, std::string>(my_phone_book.check_duplicate_client(ua.input_data.at(0), ua.input_data.at(1)))) {
+					poped_name_surname_email_has_mobile_phone_from_table[0] = poped_name;
+					poped_name_surname_email_has_mobile_phone_from_table[1] = poped_surname;
+				}
+				if (poped_name_surname_email_has_mobile_phone_from_table[0] == "") {
+					std::cout << "\nКлиента с таким именем и фамилией в базе не найдено\n\n";
+					operation_index = -1;
+					//break;
+				}
+				else {
+					poped_name_surname_email_has_mobile_phone_from_table[3] = tx.query_value<std::string>(my_phone_book.get_is_client_has_mobile_phone(ua.input_data.at(0), ua.input_data.at(1)));
+					if (poped_name_surname_email_has_mobile_phone_from_table[3] == "no") {
+						std::cout << "\nУ клиента нет ни одного номера телефона\n\n";
+						operation_index = -1;
+					}
+					else {
+						std::cout << "\nНомера телефонов клиента:\n";
+						for (const auto& n : tx.query<std::string>(my_phone_book.get_mobile_phone(ua.input_data.at(0), ua.input_data.at(1), tx.query_value<int>(my_phone_book.get_client_id(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1]))))) {
+							poped_mobile_phones_from_table.push_back(std::get<0>(n));
+						}
+						for (int i = 0; i < poped_mobile_phones_from_table.size(); i++) {
+							std::cout << std::to_string(i + 1) + "-й телефон: " << poped_mobile_phones_from_table[i] << "\n";
+							ua.mobile_phone_count++;
+						}
+					}
+					ua.delete_existing_client_mobile_phone = true;
+				}
+				break;
+			case(5):
+				for (auto& n : poped_name_surname_email_has_mobile_phone_from_table) n = "";
+				for (auto [poped_name, poped_surname] : tx.query<std::string, std::string>(my_phone_book.check_duplicate_client(ua.input_data.at(0), ua.input_data.at(1)))) {
+					poped_name_surname_email_has_mobile_phone_from_table[0] = poped_name;
+					poped_name_surname_email_has_mobile_phone_from_table[1] = poped_surname;
+				}
+				if (poped_name_surname_email_has_mobile_phone_from_table[0] == "") {
+					std::cout << "\nКлиента с таким именем и фамилией в базе не найдено\n\n";
+					operation_index = -1;
+					//break;
+				}
+				else {
+					tx.exec(my_phone_book.delete_client(ua.input_data.at(0), ua.input_data.at(1), tx.query_value<int>(my_phone_book.get_client_id(ua.input_data.at(0), ua.input_data.at(1)))));
+					std::cout << "Клиент удален из телефонной книги\n";
+					operation_index = -1;
+					
+				}
+				break;
+			case(6):
+				for (auto& n : poped_name_surname_email_has_mobile_phone_from_table) n = "";
+				poped_mobile_phones_from_table.erase(poped_mobile_phones_from_table.begin(), poped_mobile_phones_from_table.end());
+				poped_client_id_from_table.erase(poped_client_id_from_table.begin(), poped_client_id_from_table.end());
+				if (ua.b1[3].second) {
+					poped_mobile_phones_from_table.push_back(ua.input_data[0]);
+					for (const auto& n : tx.query<int>(my_phone_book.find_client_id_by_mobile_phone(ua.input_data))) {
+						poped_client_id_from_table.push_back(std::get<0>(n));
+						}
+					if (poped_client_id_from_table.size() == 0) {
+						std::cout << "\nКлиента с телефоном " + ua.input_data[0] + " в телефонной книге не найдено\n";
+						operation_index = -1;
+						
+
+					}
+					else {
+						std::cout << "\nВ телефонной книге записаны следующие клиенты с телефоном " + ua.input_data[0] + ":\n";
+						for (const auto& m : poped_client_id_from_table) {
+							for (auto [name, surname, email] : tx.query<std::string, std::string, std::string>(my_phone_book.find_client_data_by_client_id(m))) {
+								std::cout << "Имя: " + name + "\n";
+								std::cout << "Фамилия: " + surname + "\n";
+								std::cout << "email: " + email + "\n";
+								std::cout << "\n";
+							}
+						}
+						operation_index = -1;
+					}
+						
+				}
+				else {
+					
+					auto result = tx.exec(my_phone_book.find_client_by_name_surname_email(ua.input_data, ua.b1));
+					std::cout << "\nРезультаты поиска:\n";
+					result.for_each([&tx, &my_phone_book](const std::string& name, const std::string& surname, const std::string& email) {
+						std::cout << "Имя: " + name + "\n";
+						std::cout << "Фамилия: " + surname + "\n";
+						std::cout << "email: " + email + "\n";
+						if (tx.query_value<std::string>(my_phone_book.get_is_client_has_mobile_phone(name, surname)) == "no") {
+							std::cout << "Клиент не имеет ни одного мобильного телефона\n";
+							std::cout << "\n";
+
+						}
+						else if (tx.query_value<std::string>(my_phone_book.get_is_client_has_mobile_phone(name, surname)) == "yes") {
+							int k = 1;
+							
+							for (const auto& t : tx.query<std::string>(my_phone_book.get_mobile_phone(name, surname, tx.query_value<int>(my_phone_book.get_client_id(name, surname))))) {
+								std::cout << std::to_string(k) + "-й телефон: " + std::get<0>(t) + "\n";
+								k++;
+							}
+							std::cout << "\n";
+						}
+						});
+
+
+					
+					operation_index = -1;
+				}
+				
+				break;
+			case(7):
+				std::cout << "\nРабота с телефонной книгой завершена\n";
+				break;
+			case(13):
+				if (ua.answer > 3) {
+					tx.exec(my_phone_book.update_client_data(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1], 4, ua.input_data.at(3), tx.query_value<int>(my_phone_book.get_client_id(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1])), poped_mobile_phones_from_table[ua.answer - 4]));
+					std::cout << "Выбранный номер мобильного телефона изменен\n";
+				}
+				else {
+					tx.exec(my_phone_book.update_client_data(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1], ua.answer, ua.input_data.at(ua.answer - 1), tx.query_value<int>(my_phone_book.get_client_id(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1]))));
+					std::cout << "Данные изменены\n";
+				}
+				ua.change_client_data_flag = false;
+				operation_index = -1;
+				break;
+			case(15):
+				tx.exec(my_phone_book.delete_existing_mobile_phone(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1], poped_mobile_phones_from_table.at(ua.answer - 1), tx.query_value<int>(my_phone_book.get_client_id(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1]))));
+				if (poped_mobile_phones_from_table.size() == 1) tx.exec(my_phone_book.put_is_client_has_mobile_phone(poped_name_surname_email_has_mobile_phone_from_table[0], poped_name_surname_email_has_mobile_phone_from_table[1], "no"));
+
+				std::cout << "Выбранный номер мобильного телефона удален\n";
+				ua.delete_existing_client_mobile_phone = false;
+				operation_index = -1;
+				break;
+					
 			}
 		}
 		
@@ -552,11 +772,12 @@ int main() {
 			return -1;
 		}
 		catch (pqxx::broken_connection& e) {
-			std::cout << "При попытке установить соединение с БД произошло нечто ужасное. Перезапуститесь и введите данные повторно" << std::endl;
+			std::cout << "При попытке установить соединение с БД произошло нечто ужасное. Перезапуститесь и введите данные повторно. Код ошибки - ";
+			std::cout << e.what() << std::endl;
 			return -1;
 		}
 		catch (pqxx::unexpected_rows& e) {
-			std::cout << "Ошибка удаления существующей таблицы" << std::endl;
+			std::cout  << e.what() << std::endl;
 			return -1;
 		}
 

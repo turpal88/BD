@@ -45,10 +45,26 @@ class PhoneBook {
 		//std::string check_client_mobile_phone(std::string mobile_phone);
 		std::string insert_value_into_main_table(std::string column, std::string value);
 		std::string insert_value_into_aux_table(int id, std::string value);
-
+		std::string get_client_id(std::string name, std::string surname);
+		std::string get_is_client_has_mobile_phone(std::string name, std::string surname);
+		std::string get_is_client_has_mobile_phone(int client_id);
+		std::string put_is_client_has_mobile_phone(std::string name, std::string surname, std::string has_mobile_phone_flag);
 		//void adding_new_client_data_validation(std::string value_type, std::string& value);
 		std::string add_new_client(std::vector<std::string> input_data);
-		
+		std::string get_client_email(std::string name, std::string surname);
+		//std::string get_mobile_phone_count(std::string name, std::string surname);
+		std::string get_mobile_phone(std::string name, std::string surname, int client_id);
+		std::string update_client_data(std::string name, std::string surname, int updated_value_type, std::string updated_value, int client_id, std::string old_mobile_phone="");
+		std::string delete_client(std::string name, std::string surname, int client_id);
+		/*
+		std::string get_client_data(std::string name = "", std::string surname = "", std::string email = "");
+		std::string get_client_data(int client_id);
+		*/
+
+		std::string delete_existing_mobile_phone(std::string name, std::string surname, std::string deleted_mobile_phone, int client_id);
+		std::string find_client_by_name_surname_email(std::vector<std::string>& input_data, std::vector<std::pair<std::string, bool>>& b1);
+		std::string find_client_id_by_mobile_phone(std::vector<std::string>& input_data);
+		std::string find_client_data_by_client_id(int client_id);
 
     private:
 		std::string host_name;

@@ -43,7 +43,7 @@ void PhoneBook::set_db_connection_parameters() {
 	std::cout << "dbname: "; std::cin >> dbname;
 	std::cout << "user: "; std::cin >> user;
 	std::cout << "password: "; 
-	while ((c = getch()) != '\r') {
+	while ((c = _getch()) != '\r') {
 		_password.push_back(c);
 		putch('*');
 	}
@@ -156,6 +156,25 @@ std::string PhoneBook::check_duplicate_client(std::string name, std::string surn
 		+ " where name='" + name + "' and surname='" + surname + "'";
 }
 
+std::string PhoneBook::get_client_id(std::string name, std::string surname) {
+	return
+		"select id from " + this->get_table_name() + " where name = '" + name + "' and surname = '" + surname + "';";
+}
+
+std::string PhoneBook::get_is_client_has_mobile_phone(std::string name, std::string surname) {
+	return
+		"select has_mobile_phone from " + this->get_table_name() + " where name='" + name + "' and surname='" + surname + "'";
+}
+
+std::string PhoneBook::get_is_client_has_mobile_phone(int client_id) {
+	return
+		"select has_mobile_phone from " + this->get_table_name() + " where id='" + std::to_string(client_id) + ";";
+}
+
+std::string PhoneBook::put_is_client_has_mobile_phone(std::string name, std::string surname, std::string has_mobile_phone_flag) {
+	return
+		"update " + this->get_table_name() + " set has_mobile_phone='" + has_mobile_phone_flag + "' where name='" + name + "' and surname='" + surname + "'";
+}
 
 std::string PhoneBook::insert_value_into_main_table(std::string column, std::string value) {
 	return
@@ -171,8 +190,88 @@ std::string PhoneBook::add_new_client(std::vector<std::string> input_data) {
 		"insert into " + this->get_table_name() + "(name, surname, email, has_mobile_phone) values('" + input_data.at(0) + "','" + input_data.at(1) + "','" + input_data.at(2) + "','" + input_data.at(3) + "');";
 }
 
+std::string PhoneBook::get_client_email(std::string name, std::string surname) {
+	return
+		"select email from " + this->get_table_name() + " where name='" + name + "' and surname='" + surname + "';";
+}
+
+std::string PhoneBook::get_mobile_phone(std::string name, std::string surname, int client_id) {
+	return
+		"select mobile_phone from " + this->get_table_name() + "_aux where phone_book_id=" + std::to_string(client_id) + ";";
+}
+
+std::string PhoneBook::update_client_data(std::string name, std::string surname, int updated_value_type, std::string updated_value, int client_id, std::string old_mobile_phone) {
+	std::string res = "";
+	if (updated_value_type == 1) res = "update " + this->get_table_name() + " set name='" + updated_value + "' where name='" + name + "' and surname='" + surname + "';";
+	else if (updated_value_type == 2) res = "update " + this->get_table_name() + " set surname='" + updated_value + "' where name='" + name + "' and surname='" + surname + "';";
+	else if (updated_value_type == 3) res = "update " + this->get_table_name() + " set email='" + updated_value + "' where name='" + name + "' and surname='" + surname + "';";
+	else if (updated_value_type == 4) res = "update " + this->get_table_name() + "_aux set mobile_phone='" + updated_value + "' where phone_book_id=" + std::to_string(client_id) + " and mobile_phone='" + old_mobile_phone + "';";
+	else throw std::invalid_argument("При вызове метода \"update_client_data\" методу передано некорректное значение типа изменяемого поля в таблице БД");
+	return res;
+}
+
+std::string PhoneBook::delete_client(std::string name, std::string surname, int client_id) {
+	return
+		"delete from " + this->get_table_name() + "_aux where phone_book_id IN (select id from " + this->get_table_name() + " where name='" + name + "' and surname='" + surname + "'); delete from " + this->get_table_name() + " where id = " + std::to_string(client_id) + "; ";
+}
+
+/*
+std::string PhoneBook::get_client_data(std::string name, std::string surname, std::string email) {
+	std::string res = "select name, surname, email from " + this->get_table_name() + " where ";
+		if (name != "" || surname != "" || email != "") {
+		
+		} ? "select name, surname, email, has_mobile_phone from " + this->get_table_name() + " where name='" + name + "' and surname='" + surname + "';" : throw std::invalid_argument("Передана пустая строка в метод PhoneBook::get_client_data");
+}
+*/
+
+std::string PhoneBook::delete_existing_mobile_phone(std::string name, std::string surname, std::string deleted_mobile_phone, int client_id) {
+	return
+		"delete from " + this->get_table_name() + "_aux where phone_book_id=" + std::to_string(client_id) + " and mobile_phone='" + deleted_mobile_phone + "';";
+}
+
+std::string PhoneBook::find_client_by_name_surname_email(std::vector<std::string>& input_data, std::vector<std::pair<std::string, bool>>& b1) {
+	std::string res = "select name, surname, email from " + this->get_table_name() + " where ";
+	//вспомогательный вектор куда будем складывать все true-шные индексы элементов вектора b1
+	std::vector<int> temp;
+	//for (auto& n : temp) n = -1;
+	//std::vector<std::pair<std::string, bool>>::const_iterator it = b1.begin();
+	for (int i = 0; i < b1.size(); i++) {
+		if (b1[i].second && i != b1.size() - 1) temp.push_back(i);
+	}
+	if (temp.size() == 1) res += b1[temp[0]].first + "='" + input_data[0] + "';";
+	else {
+		if(temp[0] == 0 && temp[1] == 1) res += "name='" + input_data[0] + "' and surname='" + input_data[1] + "';";
+		else {
+			for (int j = 0; j < temp.size(); j++) {
+				if (j != temp.size() - 1) res += b1[temp[j]].first + "='" + input_data[j] + "' and ";
+				else res += b1[temp[j]].first + "='" + input_data[j] + "';";
+			}
+		}
+		
+	}
+	return res;
+	
+}
+
+std::string PhoneBook::find_client_id_by_mobile_phone(std::vector<std::string>& input_data) {
+	std::string res = "select phone_book_id from " + this->get_table_name() + "_aux where mobile_phone='";
+	res += input_data[0] + "';";
+	return res;
+}
 
 
+std::string PhoneBook::find_client_data_by_client_id(int client_id) {
+	return
+		"select name, surname, email from " + this->get_table_name() + " where id=" + std::to_string(client_id) + ";";
+}
+
+
+/*
+std::string PhoneBook::get_mobile_phone_count(std::string name, std::string surname) {
+	return
+		"select count(*) from " + this->get_table_name() + "_aux where phone_book_id=" + this->get_client_id(name, surname) + ";";
+}
+*/
 
 
 
