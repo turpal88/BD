@@ -7,6 +7,7 @@
 #include <Wt/Dbo/Dbo.h>
 #include <Wt/Dbo/backend/Postgres.h>
 namespace dbo = Wt::Dbo;
+/*
 class Publisher;
 class Book;
 class Stock;
@@ -25,7 +26,8 @@ public:
 
     }
 };
-
+*/
+/*
 class Book {
 public:
     int id;
@@ -41,7 +43,8 @@ public:
     }
 
 };
-
+*/
+/*
 class Stock {
 public:
     int id;
@@ -59,7 +62,8 @@ public:
     }
 
 };
-
+*/
+/*
 class Shop {
 public:
     int id;
@@ -73,7 +77,8 @@ public:
     }
 
 };
-
+*/
+/*
 class Sale {
 public:
     int id;
@@ -91,44 +96,54 @@ public:
 
 };
 
+*/
+class User {
+public:
+    std::string name = "";
+    std::string phone = "";
+    int karma = 0;
+    template<class Action>
+    void persist(Action& a) {
+        dbo::field(a, name, "name");
+        dbo::field(a, phone, "phone");
+        dbo::field(a, karma, "karma");
+
+    }
+
+};
+
 int main()
 {
     try {
         std::string conn =
             "host=localhost"
             " port=5432"
-            " dbname=phone_book"
+            " dbname=book_store_db"
             " user=postgres"
-            " password=Cnjkbwf1988";
-        
+            " password=Cnjkbwf1988!";
+
         auto postgres = std::make_unique<dbo::backend::Postgres>(conn);
+
         dbo::Session session;
         session.setConnection(std::move(postgres));
-        session.mapClass<Publisher>("publisher");
-        session.mapClass<Book>("book");
-        session.mapClass<Stock>("stock");
-        session.mapClass<Shop>("shop");
-        session.mapClass<Sale>("sale");
+        session.mapClass<User>("user");
+        //session.mapClass<Book>("book");
+        //session.mapClass<Publisher>("publisher");
+
+        //session.mapClass<Stock>("stock");
+        //session.mapClass<Shop>("shop");
+        //session.mapClass<Sale>("sale");
         session.createTables();
+
     }
     catch (const dbo::Exception& e) {
+
         std::cout << "\n" << e.what() << "\n";
     }
 
-    
-    
+
+
 
     return 0;
 
 }
-
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
