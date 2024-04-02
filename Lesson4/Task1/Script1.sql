@@ -1,21 +1,22 @@
---drop table digest;
---drop table tracks_from_album;
---drop table tracks;
---drop table albums;
---drop table artists_albums;
---drop table artists_genres;
+
+
+drop table if exists tracks cascade;
+drop table if exists tracks_digests cascade;
+drop table if exists albums cascade;
+drop table if exists artists_albums cascade;
+drop table if exists artists_genres cascade;
 
 
 
---drop table artist;
+drop table if exists artist cascade;
 
 
---drop table genre;
+drop table if exists genre cascade;
+drop table if exists digest cascade;
 
 
 
-CREATE TABLE IF NOT EXISTS Artist(
-id INTEGER PRIMARY KEY NOT NULL,
+CREATE TABLE IF NOT EXISTS Artist(id INTEGER PRIMARY KEY NOT NULL,
 name VARCHAR(40)
 );
 
