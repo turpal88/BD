@@ -76,7 +76,7 @@ struct Stock {
 struct Shop {
 	std::string name;
 	Wt::Dbo::collection<Wt::Dbo::ptr<Stock>> stock;
-
+	
 
 	template<typename Action>
 	void persist(Action& a) {
@@ -130,7 +130,7 @@ int main()
 		conn = std::make_unique<Wt::Dbo::backend::Postgres>(connString);
 
 		session.setConnection(std::move(conn));
-
+		
 		session.mapClass<Book>("book");
 		session.mapClass<Publisher>("publisher");
 
@@ -150,7 +150,23 @@ int main()
 		std::cout << "Error = " << e.what() << std::endl;
 	}
 
-	
+	/*
+	std::unique_ptr<Publisher> drofa{ new Publisher{"Дрофа"}};
+	std::unique_ptr<Publisher> power_mashines{ new Publisher{"Силовые машины"} };
+	std::unique_ptr<Publisher> lenizdat{ new Publisher{"Лениздат"} };
+	std::unique_ptr<Publisher> mosizdat{ new Publisher{"Мосиздат"} };
+	std::unique_ptr<Publisher> ekatizdat{ new Publisher{"Екатиздат"} };
+	std::unique_ptr<Publisher> kirovizdat{ new Publisher{"Кировиздат"} };
+
+	Wt::Dbo::Transaction t{ session };
+	Wt::Dbo::ptr<Publisher> publisherPtr1 = session.add<Publisher>(std::move(drofa));
+	Wt::Dbo::ptr<Publisher> publisherPtr2 = session.add<Publisher>(std::move(power_mashines));
+	Wt::Dbo::ptr<Publisher> publisherPtr3 = session.add<Publisher>(std::move(lenizdat));
+	Wt::Dbo::ptr<Publisher> publisherPtr4 = session.add<Publisher>(std::move(mosizdat));
+	Wt::Dbo::ptr<Publisher> publisherPtr5 = session.add<Publisher>(std::move(ekatizdat));
+	Wt::Dbo::ptr<Publisher> publisherPtr6 = session.add<Publisher>(std::move(kirovizdat));
+	t.commit();
+	*/
 
 	return 0;
 }
